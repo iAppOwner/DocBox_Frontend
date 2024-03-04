@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
-import { Layout, DatePicker, Badge, Input,Menu, Modal, Drawer, Dropdown, Card, Row, Col, Avatar, Space, Divider, Button, Table, message, Tooltip } from 'antd';
-import { UserOutlined  , DownloadOutlined, UploadOutlined, FieldTimeOutlined, FolderOutlined , DeleteOutlined ,EyeOutlined , PlusOutlined, DownOutlined , LogoutOutlined, DropboxOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { Layout, DatePicker, Popconfirm, Badge, Input,Menu, Modal, Drawer, Dropdown, Card, Row, Col, Avatar, Space, Divider, Button, Table, message, Tooltip } from 'antd';
+import { UserOutlined   , DownloadOutlined, UploadOutlined, FieldTimeOutlined, FolderOutlined , DeleteOutlined ,EyeOutlined , PlusOutlined, DownOutlined , LogoutOutlined, DropboxOutlined, FilePdfOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Box from "./../static/dbox.png";
 import Pdf from "./../static/pdf.png";
@@ -20,11 +20,12 @@ const Dashboard = () => {
   const [ddata,setDdata] = useState('')
   const [final,setFinal] = useState({
     dataSource : [],
-    fileSource : [],
     totalDocs : 0,
     totalFile : 0,
     totalUsers : 0
   })
+  const [fileSource,setFilesource] = useState([]) 
+
   const navigate = useNavigate()
   useEffect(()=>{
     const isLoggedIn = sessionStorage.getItem('role');
@@ -39,8 +40,50 @@ const getBoardData = ()=>{
   .then((res)=>{
     setFinal(res.data)
   })
+  .catch((err)=>message.error("Try Again..."))
 }
 
+const getData = (docName)=>{
+  axios.get(`${api}/file/get/${docName}`)
+  .then((res)=>{
+    setFilesource(res.data.value)
+  })
+  .catch((err)=>message.error("Try Again..."))
+}
+const download = (i,type)=>{
+  axios.get(`${api}/file/download?fileName=${i.filename}&&docName=${i.docName}`)
+  .then((res)=>{
+   
+if(type=="v")
+{
+  try {
+        const response =  fetch(res.data.link);
+        const blob =  response.blob();
+        // Use the blob as needed
+        console.log(blob);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+}
+else
+{
+  window.open(res.data.link, '_blank')
+}
+  })
+  .catch((err)=>message.error("Try Again..."))
+}
+
+
+const pconfirm = (i) => {
+  axios.delete(`${api}/file/delete?fileName=${i.filename}&&docName=${i.docName}`)
+  .then((res)=>{
+    getData(i.docName)
+  })
+  .catch((err)=>message.error("Try Again..."))
+};
+const pcancel = (e) => {
+  console.log("CANCELED");
+};
   let user = sessionStorage.getItem('role');
   let un = sessionStorage.getItem('un');
   const createDropbox = ()=>{
@@ -50,8 +93,9 @@ const getBoardData = ()=>{
     .then((res)=>{
    if(res.data.status==200)
    {
-    message.success("DocBox Created..")
     getBoardData()
+    message.success("DocBox Created..")
+   
    }
    else
    {
@@ -146,6 +190,7 @@ const getBoardData = ()=>{
         return <Button type='primary'
         onClick={()=>{
           setCurrent(i)
+          getData(i.docName)
           setOpen(true)
         }}
         ><EyeOutlined /> View</Button>
@@ -165,7 +210,8 @@ const getBoardData = ()=>{
         style={{
           backgroundColor : "red",
           color : 'white'
-        }}><DeleteOutlined /> Delete</Button>}
+        }}><DeleteOutlined /> Delete</Button>
+      }
       
     },
   ];
@@ -175,8 +221,8 @@ const getBoardData = ()=>{
       title: ()=>{
        return <><FolderOutlined/> File</>
       },
-      dataIndex: 'name',
-      key: 'name',
+      dataIndex: 'filename',
+      key: 'filename',
       render : (text,i)=>{
         return <span style={{cursor : "pointer"}}  onClick={()=>{
           setCurrent(i)
@@ -201,19 +247,19 @@ const getBoardData = ()=>{
         return <><FieldTimeOutlined/> Date</>
        },
     },
-    {
-      title: '',
-      dataIndex: 'view',
-      key: 'view',
-      render : (text,i)=>{
-        return  <Button type='primary'
-        onClick={()=>{
-          setCurrent(i)
-          // setOpen(true)
-        }}
-        ><EyeOutlined /> View</Button>
-      }
-    },
+    // {
+    //   title: '',
+    //   dataIndex: 'view',
+    //   key: 'view',
+    //   render : (text,i)=>{
+    //     return  <Button type='primary'
+    //     onClick={()=>{
+    //       download(i,'v')
+    //       // setOpen(true)
+    //     }}
+    //     ><EyeOutlined /> View</Button>
+    //   }
+    // },
     {
       title: '',
       dataIndex: 'view',
@@ -221,40 +267,52 @@ const getBoardData = ()=>{
       render : (text,i)=>{
         return <Button style={{backgroundColor : 'green', color : 'white'}}
         onClick={()=>{
-          setCurrent(i)
-          // setOpen(true)
+          download(i,'d')
         }}
         ><DownloadOutlined /> Download</Button>
       }
     },
-    {
-      title: '',
-      dataIndex: 'view',
-      key: 'view',
-      render : (text,i)=>{
-        return  <Button style={{backgroundColor : '#20283E', color : 'white'}}
-        disabled={!( (user == 'admin') || (user == i.aurthor))}
-        onClick={()=>{
-          setCurrent(i)
-          // setOpen(true)
-        }}
-        ><UploadOutlined /> Replace</Button>
-      }
-    },
+  //   {
+  //     title: '',
+  //     dataIndex: 'view',
+  //     key: 'view',
+  //     render : (text,i)=>{
+  //       return  <div>
+  //       <label style={{backgroundColor : '#20283E', color : 'white'}} className="ant-btn css-dev-only-do-not-override-1xg9z9n ant-btn-primary"
+  //  htmlFor={`upload`}>
+  //     <UploadOutlined/> &nbsp; Replase
+  //      </label>
+  //      <input
+  //        id={`replase`}
+  //        type="file"
+  //        style={{display:'none'}}
+  //        onChange={(e)=>handleFileUpload(e,i,'r')}
+  //      />
+  //    </div>
+  //     }
+  //   },
     {
       title: '',
       dataIndex: 'delete',
       key: 'delete',
       render : (text,i)=>{
-        return  ( (user == 'admin') || (user == i.aurthor)) && <Button
-        onClick={()=>{
-          // setMdata({...i})
-          // showModal()
-        }}
+        
+        return  ( (user == 'admin') || (user == i.aurthor)) && <div>
+            <Popconfirm
+    title={`Delete the file ${i.name}`}
+    description={`Are you sure to delete this file ${i.name}?`}
+    onConfirm={()=>pconfirm(i)}
+    onCancel={()=>pcancel()}
+    okText="Yes"
+    cancelText="No"
+  >
+          <Button
         style={{
           backgroundColor : "red",
           color : 'white'
-        }}><DeleteOutlined /> Delete</Button>}
+        }}><DeleteOutlined /> Delete</Button>       
+  </Popconfirm>
+        </div>}
       
     },
   ];
@@ -264,6 +322,31 @@ const getBoardData = ()=>{
 
 console.log(dateUtil(dateString)); 
   };
+
+  const handleFileUpload = (event,i={},type) => {
+    const file = event.target.files[0];
+    const fd = new FormData();
+    let role = sessionStorage.getItem('role');
+    if(type==="r")
+    {
+      file.name = i.filename
+      console.log(file.name,i.file.name)
+    }
+    fd.append('file',file)
+    fd.append('docName',current.docName)
+    fd.append('aurthor',sessionStorage.getItem('un'))
+    fd.append("filename",file.name)
+    fd.append('role',role)
+    fd.append("date",dateUtil(new Date()).appDate)
+    message.loading("Uploading...")
+    axios.put(`${api}/file/save/${current.docName}`,fd,{ headers: { 'Content-Type': 'multipart/form-data'}})
+    .then((res)=>{
+     setFilesource(getData(current.docName))
+     message.destroy()
+     message.success(`Uploaded Successfully...`)
+    })
+  } 
+
   return (
     <>
     <Layout>
@@ -370,6 +453,7 @@ console.log(dateUtil(dateString));
             setDdata('')
             showModal()
           }} style={{backgroundColor : 'green', color : 'white'}}><PlusOutlined /> New DocBox</Button>
+         
           </div>}
           <div>
             <br/>
@@ -399,11 +483,18 @@ console.log(dateUtil(dateString));
           } onClose={()=>{
             setOpen(false)
           }} open={open}>
-          <Button type="primary"
-          // onClick={()=>{
-          //   showModal()
-          // }}
-          ><UploadOutlined/> Upload File</Button>
+          <div>
+       <label  className="ant-btn css-dev-only-do-not-override-1xg9z9n ant-btn-primary"
+  htmlFor={`upload`}>
+     <UploadOutlined/> &nbsp; Upload file
+      </label>
+      <input
+        id={`upload`}
+        type="file"
+        style={{display:'none'}}
+        onChange={(e)=>handleFileUpload(e,'c')}
+      />
+    </div>
                       <Space style={{float : 'right'}} direction="horizontal" size={12}>
  <RangePicker />
   </Space>
@@ -415,7 +506,7 @@ console.log(dateUtil(dateString));
             </div>
            }
           }
-           dataSource={final.fileSource}
+           dataSource={fileSource}
             columns={fileColumns}
              />
         </Drawer>
