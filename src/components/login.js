@@ -17,7 +17,7 @@ const LoginForm = () => {
       username : values.username,
       password : values.password
     }
-    axios.post(`${api}/login`,{loginDetails})
+    axios.post(`${api}/api/login`,{loginDetails})
     .then((res)=>{
       if(res.data.status != 200)
       {
