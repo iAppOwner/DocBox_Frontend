@@ -1,8 +1,10 @@
 import React, {useState, useEffect} from 'react';
 import { Layout, DatePicker, Input,Menu, Modal, Drawer, Dropdown, Card, Row, Col, Avatar, Space, Divider, Button, Table, message, Tooltip } from 'antd';
-import { UserOutlined  , UploadOutlined, FieldTimeOutlined, FolderOutlined , DeleteOutlined ,EyeOutlined , PlusOutlined, DownOutlined , LogoutOutlined, DropboxOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { UserOutlined  , DownloadOutlined, UploadOutlined, FieldTimeOutlined, FolderOutlined , DeleteOutlined ,EyeOutlined , PlusOutlined, DownOutlined , LogoutOutlined, DropboxOutlined, FilePdfOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import Box from "./../static/box.png"
+import Box from "./../static/dbox.png";
+import Pdf from "./../static/pdf.png";
+import User from "./../static/users.png";
 import { dateUtil } from './utils';
 const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
@@ -200,7 +202,33 @@ const Dashboard = () => {
       dataIndex: 'view',
       key: 'view',
       render : (text,i)=>{
-        return ( (user == 'admin') || (user == i.aurthor)) && <Button type='primary'
+        return  <Button type='primary'
+        onClick={()=>{
+          setCurrent(i)
+          // setOpen(true)
+        }}
+        ><EyeOutlined /> View</Button>
+      }
+    },
+    {
+      title: '',
+      dataIndex: 'view',
+      key: 'view',
+      render : (text,i)=>{
+        return <Button style={{backgroundColor : 'green', color : 'white'}}
+        onClick={()=>{
+          setCurrent(i)
+          // setOpen(true)
+        }}
+        ><DownloadOutlined /> Download</Button>
+      }
+    },
+    {
+      title: '',
+      dataIndex: 'view',
+      key: 'view',
+      render : (text,i)=>{
+        return ( (user == 'admin') || (user == i.aurthor)) && <Button style={{backgroundColor : '#20283E', color : 'white'}}
         onClick={()=>{
           setCurrent(i)
           // setOpen(true)
@@ -271,42 +299,71 @@ console.log(dateUtil(dateString));
               padding: 24,
               margin: 0,
               minHeight: 280,
+             
             }}
           >
             <Row gutter={16}>
               <Col span={8}>
                 <Card title={
-                  <>
+                  <span style={{ color : "blue"}}>
                   <DropboxOutlined/> DocBox
-                  </>
+                  </span>
                 }>
-        1
+                  <div>
+                  <Row gutter={12}>
+                    <Col span={6}>
+                    <img src={Box}/>
+                    </Col>
+                    <Col span={6} style={{fontSize : '200%'}}>
+                     1
+                    </Col>
+                    </Row>
+                  </div>
+        
                </Card>
               </Col>
               <Col span={8}>
                 <Card title={
-                  <>
+                  <span style={{ color : "red"}}>
                   <FilePdfOutlined/> Documents
-                  </>
-                }> 1</Card>
+                  </span>
+                }> 
+                          <Row gutter={12}>
+                    <Col span={6}>
+                    <img src={Pdf}/>
+                    </Col>
+                    <Col span={6} style={{fontSize : '200%'}}>
+                     1
+                    </Col>
+                    </Row>
+                </Card>
               </Col>
           {   user === 'admin' && <Col span={8}>
                 <Card title={
-                  <>
+                  <span style={{ color : "green"}}>
                   <UserOutlined/> Active Users
-                  </>
-                }> 1</Card>
+                  </span>
+                }> 
+                          <Row gutter={12}>
+                    <Col span={6}>
+                    <img src={User}/>
+                    </Col>
+                    <Col span={6} style={{fontSize : '200%'}}>
+                     1
+                    </Col>
+                    </Row>
+                </Card>
               </Col>}
             </Row>
             <Divider/>
-            <div>
+{     user==="admin"  &&  <div>
           <Button onClick={()=>{
             setMdata({
               type : "create"
             })
             showModal()
           }} style={{backgroundColor : 'green', color : 'white'}}><PlusOutlined /> New DocBox</Button>
-          </div>
+          </div>}
           <div>
             <br/>
             <Space style={{float : 'right'}} direction="horizontal" size={12}>
